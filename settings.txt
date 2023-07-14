@@ -1,0 +1,6 @@
+set mega78001
+set savekey
+set adpcm@420
+name 7800GD Feature Test
+save
+exit
