@@ -67,14 +67,10 @@ Mega7800ReadControllers:
 			; sanitise the data a bit so people can just check button bits
 			; regardless of what controller is connected
 			
-			lda		#%11000000			; mega7800 detection bits, port 0
-			ldy		#%10000000			; mode/start button mask
-			ldx		#%11110000			; button disable mask (active low)
+			ldx		#0
 			jsr		.sanitise
 
-			lda		#%00001100			; mega7800 detection bits, port 1
-			ldy		#%00001000			; mode/start button mask
-			ldx		#%00001111			; button disable mask (active low)
+			inx
 			jsr		.sanitise
 
 			; now read the proline buttons as well, if the controller is
