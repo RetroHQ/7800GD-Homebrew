@@ -163,32 +163,48 @@ Mega7800ReadControllers:
 			stx		SWCHA				; strobe high
 			rts
 
-.sanitise:	and		JOYMODE				; see if we have a mega7800 adapter
-			beq		.mega				; yes, do mode checking
+; Masks required to sanitise input data
+
+DetectBits:	.byte	%11000000,%00001100	; port0 / port1 detect bits (L+R)
+ModeMsk:	.byte	%10000000,%00001000	; start / mode bit
+DisableMsk:	.byte	%11110000,%00001111	; all bits for port
+
+; Enter with X as the port number (0,1)
+
+.sanitise:	lda		DetectBits,x		; mega7800 detect bits for port X (LEFT+RIGHT)
+			tay
+			and		JOYMODE				; see if we have a mega7800 adapter
+			bne		.nomega				; no, just read proline
+
+			tya							; possible mega7800
+			and		JOYDIR				; check direction bit also
+			bne		.mega				; if they are also low, its bad joy data, otherwise mega7800 read
 
 			; no, get button mask and remove any buttons for this port
 			
-			txa							; set JOYMODE to %1111 when 7800 pad is present
+.nomega		lda		DisableMsk,x		; set JOYMODE to %1111 when 7800 pad is present
+			tay
 			ora		JOYMODE
 			sta		JOYMODE
 			
-			txa							; set SACB to high
+			tya							; set SACB to high
 			bne		.clear
 
 			; this is a mega7800 read, if mode is pressed remove reserved
 			; buttons and clear mode
 
-.mega:		tya							; mode button mask
-			and		JOYBTN1
-			bne		.noMode
+.mega:		lda		ModeMsk,x			; mode button mask
+			and		JOYBTN1				; mask just mode
+			bne		.noMode				; no, skip
 			
 			; mode is pressed, remove mode, x, y, z and start
 
-			tya
+			lda		ModeMsk,x			; start mask
+
 .clear:		ora		JOYBTN0				; clear S (mega mode) or SACB (7800 mode)
 			sta		JOYBTN0
 
-			txa
+			lda		DisableMsk,x		; mask for MXYZ
 			ora		JOYBTN1				; clear MXYZ
 			sta		JOYBTN1
 
